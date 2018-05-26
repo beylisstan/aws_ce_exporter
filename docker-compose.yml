@@ -1,0 +1,66 @@
+version: '3.3'
+
+volumes:
+  prometheus_data: {}
+
+
+networks:
+  monitoring: {}
+  # logging: {}
+
+services:
+
+  prometheus:
+    image: prom/prometheus:v2.1.0
+    ports:
+      - "9090:9090"
+    expose:
+      - 9090
+    volumes:
+      - ./prometheus/:/etc/prometheus/
+      - ./prometheus_data:/prometheus
+    restart: unless-stopped
+    command:
+      - "--config.file=/etc/prometheus/prometheus.yml"
+      - '--storage.tsdb.path=/prometheus'
+      - '--web.enable-admin-api'
+    networks:
+      - monitoring
+    labels:
+      container_group: monitoring
+    depends_on:
+      - influxdb
+
+  aws_ce:
+    ports:
+       - '1234:1234'
+    image: aws_ce_exporter:latest
+    expose:
+      - '1234'
+    networks:
+      - monitoring
+    command:
+      - '-t 12:00'
+    restart: unless-stopped
+    environment:
+      - AWS_ACCESS_KEY_ID
+      - AWS_SECRET_ACCESS_KEY
+
+  grafana:
+    image: grafana/grafana
+    expose:
+      - "3000"
+    ports:
+      - "3000:3000"
+    volumes:
+      - grafana_data:/var/lib/grafana
+    restart: always
+    labels:
+        labels: container_group
+    environment:
+      GF_SECURITY_ADMIN_USER: admin
+      GF_SECURITY_ADMIN_PASSWORD: admin
+    networks:
+      - monitoring
+
+
