@@ -1,8 +1,8 @@
 version: '3.3'
 
 volumes:
-  prometheus_data: {}
-
+    prometheus_data: {}
+    grafana_data: {}
 
 networks:
   monitoring: {}
@@ -28,8 +28,6 @@ services:
       - monitoring
     labels:
       container_group: monitoring
-    depends_on:
-      - influxdb
 
   aws_ce:
     ports:
